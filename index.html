@@ -476,10 +476,8 @@
   </footer>
 
   <!-- Floating Actions -->
+  <div id="scroll-progress" class="scroll-progress"></div>
   <button id="backToTop" class="back-to-top" aria-label="Back to top"><i class="fas fa-arrow-up"></i></button>
-  <a href="https://wa.me/201234567890" class="floating-whatsapp" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
-    <i class="fab fa-whatsapp"></i>
-  </a>
 
   <!-- Add hidden iframe for form submissions -->
   <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
@@ -566,6 +564,22 @@
       else backBtn.classList.remove('show');
     }
     window.addEventListener('scroll', toggleBackToTop);
+    
+    // Scroll progress + navbar blur on scroll
+    const progressBar = document.getElementById('scroll-progress');
+    const navbar = document.querySelector('.navbar');
+    function onScroll() {
+      const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+      const scrollHeight = (document.documentElement.scrollHeight || document.body.scrollHeight) - window.innerHeight;
+      const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+      if (progressBar) progressBar.style.width = pct + '%';
+      if (navbar) {
+        if (scrollTop > 10) navbar.classList.add('scrolled');
+        else navbar.classList.remove('scrolled');
+      }
+    }
+    window.addEventListener('scroll', onScroll);
+    onScroll();
     if (backBtn) backBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
     // Add iframe load handler

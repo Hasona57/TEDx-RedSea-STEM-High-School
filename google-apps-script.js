@@ -18,6 +18,12 @@ function doPost(e) {
       date: eventDate
     };
     
+    // Persist ticket in server-side store for cross-device validation
+    saveOrUpdateTicket(ticketData, {
+      status: 'issued',
+      sentAt: new Date().toISOString()
+    });
+
     // Create HTML email template
     const htmlBody = createEmailTemplate(ticketData, qrCode);
     
@@ -71,6 +77,48 @@ function doPost(e) {
       `)
       .setMimeType(ContentService.MimeType.HTML);
   }
+}
+
+// ===== Server-side Ticket Registry (Properties-based, no Sheets needed) =====
+function getTicketsStore_() {
+  const props = PropertiesService.getScriptProperties();
+  const raw = props.getProperty('tickets_store');
+  try {
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function putTicketsStore_(store) {
+  PropertiesService.getScriptProperties().setProperty('tickets_store', JSON.stringify(store));
+}
+
+function saveOrUpdateTicket(ticketData, extra) {
+  const store = getTicketsStore_();
+  const id = ticketData.id;
+  store[id] = Object.assign({}, store[id] || {}, ticketData, extra || {});
+  putTicketsStore_(store);
+  return store[id];
+}
+
+function getTicketById(id) {
+  const store = getTicketsStore_();
+  return store[id] || null;
+}
+
+function updateTicketStatus(id, status, scannerId) {
+  const store = getTicketsStore_();
+  if (!store[id]) return null;
+  store[id].status = status;
+  if (status === 'checked-in') {
+    store[id].checkedInAt = new Date().toISOString();
+  } else if (status === 'denied') {
+    store[id].deniedAt = new Date().toISOString();
+  }
+  if (scannerId) store[id].scannerId = scannerId;
+  putTicketsStore_(store);
+  return store[id];
 }
 
 function createEmailTemplate(ticketData, qrCode) {
@@ -377,10 +425,49 @@ function sendReminderEmails() {
 
 // Function to handle CORS for web app deployment
 function doGet(e) {
-  return ContentService
-    .createTextOutput(JSON.stringify({ 
-      status: 'TEDxRedSeaSTEM Email Service is running',
-      version: '1.0.0'
-    }))
-    .setMimeType(ContentService.MimeType.JSON);
+  const params = e && e.parameter ? e.parameter : {};
+  const action = params.action || '';
+  const callback = params.callback;
+
+  function respondJson(obj) {
+    if (callback) {
+      return ContentService
+        .createTextOutput(callback + '(' + JSON.stringify(obj) + ')')
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService
+      .createTextOutput(JSON.stringify(obj))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (action === 'validate') {
+    const ticketId = params.ticketId;
+    if (!ticketId) {
+      return respondJson({ ok: false, error: 'MISSING_TICKET_ID' });
+    }
+    const ticket = getTicketById(ticketId);
+    if (!ticket) {
+      return respondJson({ ok: true, found: false });
+    }
+    return respondJson({ ok: true, found: true, ticket: ticket });
+  }
+
+  if (action === 'update') {
+    const ticketId = params.ticketId;
+    const status = params.status; // 'checked-in' | 'denied'
+    const scannerId = params.scannerId || '';
+    if (!ticketId || !status) {
+      return respondJson({ ok: false, error: 'MISSING_PARAMS' });
+    }
+    const updated = updateTicketStatus(ticketId, status, scannerId);
+    if (!updated) {
+      return respondJson({ ok: false, error: 'NOT_FOUND' });
+    }
+    return respondJson({ ok: true, ticket: updated });
+  }
+
+  return respondJson({ 
+    status: 'TEDxRedSeaSTEM Email/QR Service is running',
+    version: '1.1.0'
+  });
 }

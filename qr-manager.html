@@ -625,6 +625,7 @@
   </div>
 
   <div class="notification" id="notification"></div>
+  <iframe name="email_iframe" id="email_iframe" style="display:none;"></iframe>
 
   <script>
          // Google Apps Script URL for email functionality
@@ -656,6 +657,31 @@
         
         // Email sending handler
         document.getElementById('send-email-btn').addEventListener('click', sendEmail);
+        
+        // Handle hidden iframe load as success callback for email sending
+        const emailIframe = document.getElementById('email_iframe');
+        if (emailIframe) {
+          emailIframe.addEventListener('load', function () {
+            if (window.emailSubmitInProgress) {
+              window.emailSubmitInProgress = false;
+              if (window.emailSubmitTimeout) {
+                clearTimeout(window.emailSubmitTimeout);
+                window.emailSubmitTimeout = null;
+              }
+              if (currentTicket) {
+                currentTicket.sent = true;
+                localStorage.setItem('tedx_tickets', JSON.stringify(generatedTickets));
+                displayTickets();
+              }
+              const sendBtn = document.getElementById('send-email-btn');
+              if (sendBtn) {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = 'Send Email';
+              }
+              showNotification('Ticket sent successfully! Check your email.', 'success');
+            }
+          });
+        }
       });
 
                                                                                                                                                                function generateQRCode(event) {
@@ -760,7 +786,7 @@
          const form = document.createElement('form');
          form.method = 'POST';
          form.action = EMAIL_SCRIPT_URL;
-         form.target = '_blank';
+         form.target = 'email_iframe';
          form.style.display = 'none';
          
          // Add form fields
@@ -785,17 +811,22 @@
            form.appendChild(input);
          }
          
-         // Submit the form
+         // Submit the form and wait for iframe callback
          document.body.appendChild(form);
+         window.emailSubmitInProgress = true;
+         window.emailSubmitTimeout = setTimeout(() => {
+           if (window.emailSubmitInProgress) {
+             window.emailSubmitInProgress = false;
+             showNotification('Error sending email. Please try again.', 'error');
+             const sendBtnLate = document.getElementById('send-email-btn');
+             if (sendBtnLate) {
+               sendBtnLate.disabled = false;
+               sendBtnLate.innerHTML = 'Send Email';
+             }
+           }
+         }, 15000);
          form.submit();
          document.body.removeChild(form);
-         
-         // Mark ticket as sent
-         currentTicket.sent = true;
-         localStorage.setItem('tedx_tickets', JSON.stringify(generatedTickets));
-         displayTickets();
-         
-         showNotification('Ticket sent successfully! Check your email.', 'success');
          
        } catch (error) {
          console.error('Error sending email:', error);

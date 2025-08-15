@@ -246,6 +246,24 @@
         <h1>TEDxRedSeaSTEM</h1>
         <p class="tagline">Ideas Worth Spreading</p>
         <p class="date">Coming August 2025</p>
+        <div id="countdown" class="countdown" aria-label="Event countdown">
+          <div class="countdown-item">
+            <div id="cd-days" class="countdown-number">00</div>
+            <div class="countdown-label">Days</div>
+          </div>
+          <div class="countdown-item">
+            <div id="cd-hours" class="countdown-number">00</div>
+            <div class="countdown-label">Hours</div>
+          </div>
+          <div class="countdown-item">
+            <div id="cd-mins" class="countdown-number">00</div>
+            <div class="countdown-label">Minutes</div>
+          </div>
+          <div class="countdown-item">
+            <div id="cd-secs" class="countdown-number">00</div>
+            <div class="countdown-label">Seconds</div>
+          </div>
+        </div>
         <div class="hero-buttons">
           <button class="btn" onclick="openCheckout('Premium Ticket - EGP 300')">
             <i class="fas fa-ticket-alt"></i> Get Tickets
@@ -457,6 +475,12 @@
     </div>
   </footer>
 
+  <!-- Floating Actions -->
+  <button id="backToTop" class="back-to-top" aria-label="Back to top"><i class="fas fa-arrow-up"></i></button>
+  <a href="https://wa.me/201234567890" class="floating-whatsapp" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
+    <i class="fab fa-whatsapp"></i>
+  </a>
+
   <!-- Add hidden iframe for form submissions -->
   <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
 
@@ -514,6 +538,35 @@
     if (statsSection) {
       statsObserver.observe(statsSection);
     }
+
+    // Countdown Timer (set to Sept 6, 2025 at 10:00 AM local)
+    const EVENT_DATE = new Date('2025-09-06T10:00:00');
+    function updateCountdown() {
+      const now = new Date();
+      let diff = EVENT_DATE.getTime() - now.getTime();
+      if (diff < 0) diff = 0;
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const mins = Math.floor((diff / (1000 * 60)) % 60);
+      const secs = Math.floor((diff / 1000) % 60);
+      const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = String(val).padStart(2, '0'); };
+      set('cd-days', days);
+      set('cd-hours', hours);
+      set('cd-mins', mins);
+      set('cd-secs', secs);
+    }
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+
+    // Back-to-top behavior
+    const backBtn = document.getElementById('backToTop');
+    function toggleBackToTop() {
+      if (!backBtn) return;
+      if (window.scrollY > 300) backBtn.classList.add('show');
+      else backBtn.classList.remove('show');
+    }
+    window.addEventListener('scroll', toggleBackToTop);
+    if (backBtn) backBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
     // Add iframe load handler
     window.addEventListener('load', function() {

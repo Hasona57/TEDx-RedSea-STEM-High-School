@@ -1,0 +1,853 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TEDx Red Sea STEM</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    .modal-content {
+      max-height: 90vh;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #e11d48 #1a1a1a;
+    }
+
+    .modal-content::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .modal-content::-webkit-scrollbar-track {
+      background: #1a1a1a;
+      border-radius: 4px;
+    }
+
+    .modal-content::-webkit-scrollbar-thumb {
+      background: #e11d48;
+      border-radius: 4px;
+    }
+
+    #image_preview {
+      max-height: 300px;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 2px solid #333;
+      background: #1a1a1a;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-status {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    input[type="file"] {
+      padding: 10px;
+      background: #1a1a1a;
+      border: 2px dashed #333;
+      border-radius: 8px;
+      width: 100%;
+      cursor: pointer;
+      color: #fff;
+    }
+
+    input[type="file"]:hover {
+      border-color: #e11d48;
+    }
+
+    .price-summary {
+      background: #1a1a1a;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    .price-summary h3 {
+      color: #e11d48;
+      margin: 0;
+    }
+
+    /* Enhanced animations */
+    .hero-content {
+      animation: fadeInUp 1.5s ease-in-out;
+    }
+
+    .section {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.8s ease;
+    }
+
+    .section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Enhanced ticket card */
+    .ticket-card {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .ticket-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(225, 29, 72, 0.1), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .ticket-card:hover::before {
+      left: 100%;
+    }
+
+    .ticket-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(225, 29, 72, 0.3);
+    }
+
+    /* Enhanced team cards */
+    .team-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .team-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, #e11d48, #be123c);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .team-card:hover::after {
+      transform: scaleX(1);
+    }
+
+
+
+    /* Enhanced navigation */
+    nav a {
+      position: relative;
+      overflow: hidden;
+    }
+
+    nav a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: #e11d48;
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    nav a:hover::after {
+      transform: scaleX(1);
+    }
+
+    /* Stats section */
+    .stats-section {
+      background: linear-gradient(135deg, #1a1a1a, #0d0d0d);
+      padding: 4rem 1.5rem;
+    }
+
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .stat-card {
+      text-align: center;
+      padding: 2rem;
+      background: rgba(225, 29, 72, 0.1);
+      border-radius: 1rem;
+      border: 1px solid rgba(225, 29, 72, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      background: rgba(225, 29, 72, 0.15);
+    }
+
+    .stat-number {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #e11d48;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      color: #ccc;
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="preloader">
+    <div class="preloader-ring"></div>
+    <img src="images/logo.png" alt="TEDx Logo" class="preloader-logo" />
+  </div>
+
+  <!-- Add Loading Spinner -->
+  <div id="loading-spinner" class="loading-spinner">
+    <div class="spinner"></div>
+    <div class="loading-text">Processing your request...</div>
+  </div>
+
+  <!-- Add Notification Modal -->
+  <div id="notification-modal" class="notification-modal">
+    <div class="notification-content">
+      <h3 id="notification-title"></h3>
+      <p id="notification-message"></p>
+      <button class="notification-btn" onclick="closeNotification()">OK</button>
+    </div>
+  </div>
+
+  <header class="navbar">
+    <div class="nav-container">
+      <img src="images/logo.png" alt="TEDx Logo" class="nav-logo">
+      <nav>
+        <a href="#about">About</a>
+        <a href="#team">Team</a>
+        <a href="#tickets">Tickets</a>
+        <a href="#stats">Stats</a>
+        <a href="#faq">FAQ</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="overlay">
+      <div class="hero-content">
+        <img src="images/logo.png" class="hero-logo" alt="TEDx Logo" />
+        <h1>TEDxRedSeaSTEM</h1>
+        <p class="tagline">Ideas Worth Spreading</p>
+        <p class="date">Coming August 2025</p>
+        <div class="hero-buttons">
+          <button class="btn" onclick="openCheckout('Premium Ticket - EGP 300')">
+            <i class="fas fa-ticket-alt"></i> Get Tickets
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="about" class="section">
+    <h2>About TEDx</h2>
+    <p>
+      TEDxRedSeaSTEM is organized by Red Sea STEM School students to share transformative ideas and innovations with the world, in the spirit of TED. Our event brings together passionate speakers, innovative thinkers, and curious minds to explore ideas that can change the world.
+    </p>
+  </section>
+
+  <section id="stats" class="section dark stats-section">
+    <h2>Event Statistics</h2>
+    <div class="stats-container">
+      <div class="stat-card">
+        <div class="stat-number" data-target="500">0</div>
+        <div class="stat-label">Expected Attendees</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" data-target="15">0</div>
+        <div class="stat-label">Speakers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" data-target="8">0</div>
+        <div class="stat-label">Hours of Content</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" data-target="100">0</div>
+        <div class="stat-label">Team Members</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tickets" class="section dark">
+    <h2>Tickets</h2>
+    <div class="ticket-container">
+      <div class="ticket-card">
+        <h3><i class="fas fa-star"></i> Premium Ticket</h3>
+        <div class="price">EGP 300</div>
+        <ul>
+          <li><i class="fas fa-check"></i> Access to all sessions</li>
+          <li><i class="fas fa-check"></i> Event swag bag</li>
+          <li><i class="fas fa-check"></i> Lunch and refreshments</li>
+          <li><i class="fas fa-check"></i> Networking opportunities</li>
+          <li><i class="fas fa-check"></i> Certificate of attendance</li>
+          <li><i class="fas fa-check"></i> Priority seating</li>
+        </ul>
+        <button class="btn" onclick="openCheckout('Premium Ticket - EGP 300')">
+          <i class="fas fa-shopping-cart"></i> Select
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="section dark">
+    <h2>FAQ</h2>
+    <div class="faq">
+      <details>
+        <summary><i class="fas fa-question-circle"></i> Is the event open to the public?</summary>
+        <p>No, You must pay the fees due to limited seating and to ensure that the event is a success.</p>
+      </details>
+      <details>
+        <summary><i class="fas fa-question-circle"></i> Will it be live streamed?</summary>
+        <p>Yes, the event will be streamed on our YouTube channel.</p>
+      </details>
+      <details>
+        <summary><i class="fas fa-question-circle"></i> How do I get my QR code ticket?</summary>
+        <p>After payment confirmation, you'll receive a QR code ticket via email that you can scan at the event.</p>
+      </details>
+      <details>
+        <summary><i class="fas fa-question-circle"></i> Can I transfer my ticket?</summary>
+        <p>Tickets are non-transferable and tied to the registered attendee.</p>
+      </details>
+    </div>
+  </section>
+  
+  <section id="contact" class="section">
+    <h2>Contact Us</h2>
+    <form id="contact-form" class="contact-form" onsubmit="submitContactForm(event)">
+      <input type="text" name="name" placeholder="Your Name" required />
+      <input type="email" name="email" placeholder="Your Email" required />
+      <textarea name="message" placeholder="Your Message" required></textarea>
+      <button type="submit" class="btn-primary">
+        <i class="fas fa-paper-plane"></i> Send Message
+      </button>
+    </form>
+    <p id="contact-status" class="form-status"></p>
+  </section>
+
+  <section id="team" class="section dark">
+    <h2>Meet the Team</h2>
+    <div class="team-scroll-wrapper">
+      <div class="team-container">
+        <div class="team-card">
+          <img src="images/salma.jpeg" alt="Member 1" class="team-img" />
+          <h3 class="team-name">Salma Mohamed</h3>
+          <p class="team-role">Chairwoman</p>
+        </div>
+        <div class="team-card">
+          <img src="images/Ahmed Afify.jpg" alt="Member 2" class="team-img" />
+          <h3 class="team-name">Ahmed Afify</h3>
+          <p class="team-role">CFO</p>
+        </div>
+        <div class="team-card">
+          <img src="images/Mohamed zidan.jpg" alt="Member 3" class="team-img" />
+          <h3 class="team-name">Mohamed zidan</h3>
+          <p class="team-role">CEO</p>
+        </div>
+        <div class="team-card">
+          <img src="images/Basma Ashour.jpg" alt="Member 4" class="team-img" />
+          <h3 class="team-name">Basma Ashour</h3>
+          <p class="team-role">HR Manager</p>
+        </div>
+        <div class="team-card">
+          <img src="images/Yusuf El-badry.jpg" alt="Member 5" class="team-img" />
+          <h3 class="team-name">Yusuf El-badry</h3>
+          <p class="team-role">COO</p>
+        </div>
+        <div class="team-card">
+          <img src="images/Hassan.png" alt="Member 6" class="team-img" />
+          <h3 class="team-name">Hassan Mohamed</h3>
+          <p class="team-role">IT ViceHead</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+
+  <div id="checkout-modal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close" onclick="closeCheckout()">&times;</span>
+      <h2><i class="fas fa-shopping-cart"></i> Checkout</h2>
+      <div id="ticket-summary"></div>
+
+      <form id="checkout-form" onsubmit="submitCheckoutForm(event)">
+        <div class="form-group">
+          <label for="user_name"><i class="fas fa-user"></i> Full Name</label>
+          <input type="text" id="user_name" name="user_name" required>
+        </div>
+
+        <div class="form-group">
+          <label for="whatsapp"><i class="fas fa-phone"></i> Phone Number</label>
+          <input type="tel" id="whatsapp" name="whatsapp" 
+            pattern="^\+?[1-9]\d{1,14}$"
+            placeholder="+20XXXXXXXXXX"
+            title="Please enter a valid phone number with country code"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label for="user_email"><i class="fas fa-envelope"></i> Email</label>
+          <input type="email" id="user_email" name="user_email" required>
+        </div>
+
+        <div class="form-group">
+          <label for="promo_code"><i class="fas fa-tag"></i> Promo Code (Optional)</label>
+          <div class="promo-container" style="display: flex; gap: 10px;">
+            <input type="text" id="promo_code" name="promo_code" placeholder="Enter promo code if you have one" style="flex: 1;">
+            <button type="button" class="btn-secondary" onclick="validatePromoCode()">Apply</button>
+          </div>
+        </div>
+
+        <div class="price-summary">
+          <p style="margin-bottom: 1rem; color: #ccc;"><i class="fas fa-info-circle"></i> Please make the payment to the InstaPay number (will be provided soon) and upload the screenshot below.</p>
+          <h3>Ticket Price: EGP 300</h3>
+          <p id="discount-info" style="margin-top: 10px; font-size: 0.9rem;"></p>
+        </div>
+
+        <div class="form-group">
+          <label for="transaction_image"><i class="fas fa-image"></i> Payment Screenshot</label>
+          <input type="file" id="transaction_image" name="transaction_image" accept="image/*" onchange="previewImage(this)" required>
+          <img id="image_preview" style="max-width: 100%; margin-top: 10px; display: none;" alt="Transaction Preview">
+        </div>
+
+        <input type="hidden" name="ticket_type" id="ticket_type">
+        <button type="submit" class="btn-primary">
+          <i class="fas fa-check"></i> Submit Purchase
+        </button>
+        <div id="checkout-form-status" class="form-status"></div>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>TEDxRedSeaSTEM</h3>
+        <p>Ideas Worth Spreading</p>
+      </div>
+      <div class="footer-section">
+        <h4>Quick Links</h4>
+        <a href="#about">About</a>
+        <a href="#tickets">Tickets</a>
+      </div>
+      <div class="footer-section">
+        <h4>Contact</h4>
+        <p><i class="fas fa-envelope"></i> info@tedxredseastem.com</p>
+        <p><i class="fas fa-phone"></i> +20 XXX XXX XXXX</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      &copy; 2025 TEDxRedSeaSTEM | Powered by Red Sea STEM School Students
+    </div>
+  </footer>
+
+  <!-- Add hidden iframe for form submissions -->
+  <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+
+  <script>
+    // Intersection Observer for animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, observerOptions);
+
+    // Observe all sections
+    document.querySelectorAll('.section').forEach(section => {
+      observer.observe(section);
+    });
+
+    // Animate stats numbers
+    function animateStats() {
+      const stats = document.querySelectorAll('.stat-number');
+      stats.forEach(stat => {
+        const target = parseInt(stat.getAttribute('data-target'));
+        const duration = 2000;
+        const increment = target / (duration / 16);
+        let current = 0;
+        
+        const timer = setInterval(() => {
+          current += increment;
+          if (current >= target) {
+            current = target;
+            clearInterval(timer);
+          }
+          stat.textContent = Math.floor(current);
+        }, 16);
+      });
+    }
+
+    // Trigger stats animation when stats section is visible
+    const statsObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          animateStats();
+          statsObserver.unobserve(entry.target);
+        }
+      });
+    });
+
+    const statsSection = document.querySelector('#stats');
+    if (statsSection) {
+      statsObserver.observe(statsSection);
+    }
+
+    // Add iframe load handler
+    window.addEventListener('load', function() {
+      const iframe = document.getElementById('hidden_iframe');
+      
+      iframe.addEventListener('load', function() {
+        try {
+          hideLoading();
+          // Check if this was triggered by a form submission
+          if (window.lastSubmittedForm === 'checkout') {
+            showNotification(
+              'Purchase Successful!',
+              'Your ticket purchase has been submitted. Please check your email for confirmation.',
+              'success'
+            );
+            document.getElementById('checkout-form').reset();
+            document.getElementById('image_preview').style.display = 'none';
+            setTimeout(() => {
+              closeModal();
+            }, 3000);
+          } else if (window.lastSubmittedForm === 'contact') {
+            showNotification(
+              'Message Sent!',
+              'Your message has been sent successfully. We\'ll get back to you soon.',
+              'success'
+            );
+            document.getElementById('contact-form').reset();
+          }
+          window.lastSubmittedForm = null;
+        } catch (error) {
+          showNotification(
+            'Error',
+            'An error occurred. Please try again.',
+            'error'
+          );
+        }
+      });
+    });
+
+    window.addEventListener("load", function () {
+      const preloader = document.getElementById("preloader");
+      if (preloader) {
+        setTimeout(() => {
+          preloader.style.display = "none";
+        }, 2000);
+      }
+    });
+
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw0nXT433DKij04dw9mfX0UDnDNjcH5B4EAxV14TwhJpCzU0XCybc6J2oplGQleO272Sw/exec';
+    const CONTACT_FORM_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw0nXT433DKij04dw9mfX0UDnDNjcH5B4EAxV14TwhJpCzU0XCybc6J2oplGQleO272Sw/exec';
+
+    // Team member promo codes (no discounts, just for tracking)
+    const PROMO_CODES = {
+        'BN2025': 'Bissan Nasr',
+        'AM2025': 'Amira Mohamed',
+        'EA2025': 'Eyad Abdulhafiz',
+        'RE2025': 'Radwa Elherzawy',
+        'OH2025': 'Omar hamed',
+        'MH2025': 'Mohamed Hamdy',
+        'MS2025': 'Mayar Sadek',
+        'MA2025': 'Mariam aseem',
+        'OA2025': 'Omar Ashraf',
+        'SM2025': 'Shahd Muhammad',
+        'AH2025': 'Asmaa Hassan',
+        'AA2025': 'Anas Ahmed',
+        'MM2025': 'Mahmoud Mohammed',
+        'RR2025': 'Rahma Ramadan',
+        'SA2025': 'Saif Ahmed',
+        'MT2025': 'Mohamed Tamer',
+        'MA2025B': 'Mohaned Ahmed',
+        'AS2025': 'Alkasem Soliman',
+        'JM2025': 'Jana Mahmoud',
+        'YS2025': 'Youseff samir',
+        'MS2025B': 'Mohaned sameer',
+        'MA2025C': 'Mohamed ali',
+        'SM2025B': 'Sama Mohamed',
+        'HT2025': 'HajerTarek',
+        'JA2025': 'Jenny Adel',
+        'MM2025B': 'MARAIM MOHAMED',
+        'BM2025': 'Basmala Mahmoud',
+        'MM2025C': 'Mahmoud Mohamed',
+        'PZ2025': 'Pishoy Zarif',
+        'RA2025': 'Rowida Arafa',
+        'MA2025D': 'Moataz Ahmed',
+        'OH2025B': 'Omar Hazem',
+        'MG2025': 'Mohamed Gomaa',
+        'EH2025': 'el-shimaa hassan',
+        'RA2025B': 'Retaj Ahmed',
+        'MH2025B': 'Muhammed Hassan',
+        'SA2025B': 'Shahd abdelatti',
+        'MA2025E': 'Malak Ahmed',
+        'AS2025B': 'Asmaa Saber',
+        'MA2025F': 'Mohamed Amin',
+        'ZA2025': 'Ziad Ahmed',
+        'MM2025D': 'Moaz Mohammad',
+        'YA2025': 'Youssef ahmed',
+        'NH2025': 'Noor hameed',
+        'AE2025': 'Ahmed Eion',
+        'OE2025': 'Omar eion',
+        'NM2025': 'Nada Magdy',
+        'HF2025': 'Hana Fathy',
+        'YM2025': 'Yara Mohamed',
+        'MM2025E': 'malk mohy',
+        'AR2025': 'Allaa Reda',
+        'MM2025F': 'Malak medhat',
+        'SA2025C': 'Salma Ahmed',
+        'AA2025B': 'احمد علاء',
+        'HT2025B': 'Habiba Tarek',
+        'HA2025': 'Haneen Ali',
+        'SM2025C': 'Shrouk Mahmoud',
+        'MA2025G': 'Marwa Ali',
+        'AY2025': 'Ahmed Yahia',
+        'AB2025': 'Ahmed Bassem',
+        'RH2025': 'Retaj Hagag',
+        'OE2025B': 'omarElkady',
+        'HH2025': 'Habiba Hassanain',
+        'MG2025B': 'Mariem gamal',
+        'MA2025H': 'Malak Ahmed',
+        'RM2025': 'Rana Mohamed',
+        'MH2025C': 'Mohamed hael',
+        'MA2025I': 'Mohamed Ahmed',
+        'GA2025': 'Ganna Ahmed',
+        'SE2025': 'Sophia Essam',
+        'OM2025': 'Omar Medhat',
+        'OA2025B': 'omnia ashraf',
+        'MM2025G': 'Malak Mustafa',
+        'RA2025C': 'Raghda Abdelhamid',
+        'RK2025': 'Radwa Khalled',
+        'HA2025B': 'Habiba Ahmed',
+        'HA2025C': 'Hoda Ahmed',
+        'AA2025C': 'Àlaa Ayman',
+        'MA2025J': 'Menna Ali',
+        'HS2025': 'Hana shaban',
+        'OA2025C': 'Omnia Alaa',
+        'AG2025': 'Ahmed Gharieb',
+        'NA2025': 'Nada Ashraf',
+        'MM2025H': 'Mostafa mohamed',
+        'AN2025': 'Ahmed Nasr',
+        'DD2025': 'Dina Diab',
+        'RS2025': 'Renad Sameh',
+        'SM2025D': 'Shahd mahmoud'
+      };
+
+    // Function to validate promo code
+    function validatePromoCode() {
+      const promoCode = document.getElementById("promo_code").value.trim().toUpperCase();
+      const discountInfo = document.getElementById("discount-info");
+      
+      if (!promoCode) {
+        discountInfo.textContent = "";
+        return;
+      }
+
+      if (PROMO_CODES[promoCode]) {
+        discountInfo.textContent = "Valid promo code!";
+        discountInfo.style.color = "#4ade80"; // Success color
+      } else {
+        discountInfo.textContent = "Invalid promo code";
+        discountInfo.style.color = "#ef4444"; // Error color
+      }
+    }
+
+    // Initialize the form
+    function openCheckout(type) {
+      document.getElementById("checkout-modal").classList.remove("hidden");
+      document.getElementById("ticket_type").value = type;
+    }
+
+    function closeModal() {
+      document.getElementById("checkout-modal").classList.add("hidden");
+      document.getElementById("promo_code").value = "";
+      document.getElementById("discount-info").textContent = "";
+      document.getElementById('image_preview').style.display = 'none';
+    }
+
+    function closeCheckout() {
+      document.getElementById("checkout-modal").classList.add("hidden");
+    }
+
+    function previewImage(input) {
+      const preview = document.getElementById('image_preview');
+      const file = input.files[0];
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+          
+          // Scroll to make the preview visible
+          setTimeout(() => {
+            preview.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }, 100);
+        }
+        reader.readAsDataURL(file);
+      } else {
+        preview.style.display = 'none';
+        preview.src = '';
+      }
+    }
+
+    function showLoading(message = 'Processing your request...') {
+      document.querySelector('#loading-spinner .loading-text').textContent = message;
+      document.getElementById('loading-spinner').classList.add('active');
+    }
+
+    function hideLoading() {
+      document.getElementById('loading-spinner').classList.remove('active');
+    }
+
+    function showNotification(title, message, type = 'success') {
+      const modal = document.getElementById('notification-modal');
+      const content = modal.querySelector('.notification-content');
+      const titleEl = document.getElementById('notification-title');
+      const messageEl = document.getElementById('notification-message');
+
+      content.className = 'notification-content ' + type;
+      titleEl.textContent = title;
+      messageEl.textContent = message;
+      modal.classList.add('active');
+    }
+
+    function closeNotification() {
+      document.getElementById('notification-modal').classList.remove('active');
+    }
+
+    async function submitCheckoutForm(event) {
+      event.preventDefault();
+      showLoading('Processing your purchase...');
+      
+      const form = event.target;
+      
+      try {
+        // Get the image file
+        const imageFile = document.getElementById('transaction_image').files[0];
+        if (!imageFile) {
+          throw new Error('Please upload a payment screenshot');
+        }
+
+        // Convert image to base64
+        const base64Image = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(imageFile);
+        });
+
+        // Create a new FormData instance
+        const formData = new FormData();
+        
+        // Add all form fields
+        formData.append('name', form.querySelector('[name="user_name"]').value);
+        formData.append('email', form.querySelector('[name="user_email"]').value);
+        formData.append('whatsapp', form.querySelector('[name="whatsapp"]').value);
+        formData.append('ticket_type', form.querySelector('[name="ticket_type"]').value);
+        formData.append('promo_code', form.querySelector('[name="promo_code"]').value || '');
+        formData.append('base_price', '300');
+        formData.append('transaction_image', base64Image);
+
+        // Create a temporary form for submission
+        const tempForm = document.createElement('form');
+        tempForm.method = 'POST';
+        tempForm.action = GOOGLE_SCRIPT_URL;
+        tempForm.target = 'hidden_iframe';
+
+        // Add all form data as hidden inputs
+        for (let [key, value] of formData.entries()) {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = value;
+          tempForm.appendChild(input);
+        }
+
+        // Add the form to the document, submit it, and remove it
+        document.body.appendChild(tempForm);
+        window.lastSubmittedForm = 'checkout';
+        tempForm.submit();
+        document.body.removeChild(tempForm);
+        
+      } catch (error) {
+        hideLoading();
+        showNotification(
+          'Error',
+          error.message || 'An error occurred. Please try again.',
+          'error'
+        );
+      }
+    }
+
+    async function submitContactForm(event) {
+      event.preventDefault();
+      showLoading('Sending your message...');
+      
+      const form = event.target;
+      
+      try {
+        // Create a temporary form for submission
+        const tempForm = document.createElement('form');
+        tempForm.method = 'POST';
+        tempForm.action = CONTACT_FORM_SCRIPT_URL;
+        tempForm.target = 'hidden_iframe';
+
+        // Add form data as hidden inputs
+        const formData = {
+          'name': form.name.value,
+          'email': form.email.value,
+          'message': form.message.value,
+          'timestamp': new Date().toISOString()
+        };
+
+        // Add all form data as hidden inputs
+        Object.entries(formData).forEach(([key, value]) => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = value;
+          tempForm.appendChild(input);
+        });
+
+        // Add the form to the document, submit it, and remove it
+        document.body.appendChild(tempForm);
+        window.lastSubmittedForm = 'contact';
+        tempForm.submit();
+        document.body.removeChild(tempForm);
+        
+      } catch (error) {
+        hideLoading();
+        showNotification(
+          'Error',
+          'Error sending message. Please try again.',
+          'error'
+        );
+      }
+    }
+</script>
+</body>
+</html>

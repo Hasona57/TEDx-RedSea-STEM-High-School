@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code Manager - TEDx Red Sea STEM</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="images/logo.png">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+           <script>
+      // Real QR Code Generator using QR Server API
+      class QRCodeGenerator {
+        constructor() {
+          this.canvas = null;
+        }
+        
+        generate(text, size = 200) {
+          try {
+            // Create a canvas element
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Generate real QR code using QR Server API
+            this.generateRealQRCode(canvas, text, size);
+            
+            this.canvas = canvas;
+            return canvas;
+          } catch (error) {
+            console.error('Error generating QR code:', error);
+            return this.createTextFallback(text, size);
+          }
+        }
+        
+        generateRealQRCode(canvas, text, size) {
+          const ctx = canvas.getContext('2d');
+          
+          // Clear canvas with white background
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, size, size);
+          
+          // Create an image element to load the QR code
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          
+          // Use QR Server API to generate real QR code
+          const qrServerUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}&format=png&margin=2`;
+          
+          img.onload = () => {
+            // Draw the QR code image onto the canvas
+            ctx.drawImage(img, 0, 0, size, size);
+          };
+          
+          img.onerror = () => {
+            console.warn('Failed to load QR code from QR Server, using fallback');
+            this.createTextFallback(text, size);
+          };
+          
+          img.src = qrServerUrl;
+        }
+        
+        createTextFallback(text, size = 200) {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          canvas.width = size;
+          canvas.height = size;
+          
+          // White background
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, size, size);
+          
+          // Black border
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(10, 10, size - 20, size - 20);
+          
+          // Add text
+          ctx.fillStyle = '#000000';
+          ctx.font = '14px monospace';
+          ctx.textAlign = 'center';
+          
+          // Split text into lines
+          const words = text.split(' ');
+          const lines = [];
+          let currentLine = '';
+          
+          for (let word of words) {
+            if (currentLine.length + word.length < 20) {
+              currentLine += word + ' ';
+            } else {
+              lines.push(currentLine.trim());
+              currentLine = word + ' ';
+            }
+          }
+          if (currentLine) {
+            lines.push(currentLine.trim());
+          }
+          
+          // Draw text lines
+          const lineHeight = 20;
+          const startY = size / 2 - (lines.length * lineHeight) / 2;
+          
+          lines.forEach((line, index) => {
+            ctx.fillText(line, size / 2, startY + index * lineHeight);
+          });
+          
+          this.canvas = canvas;
+          return canvas;
+        }
+        
+        toDataURL() {
+          if (this.canvas) {
+            return this.canvas.toDataURL('image/png');
+          }
+          return '';
+        }
+      }
+      
+      // Global QR code instance
+      let qrGenerator = new QRCodeGenerator();
+    </script>
+  <style>
+    .qr-manager {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+      padding: 2rem 1rem;
+    }
+
+    .qr-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .qr-header h1 {
+      color: #e11d48;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .qr-header p {
+      color: #ccc;
+      font-size: 1.1rem;
+    }
+
+    .qr-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: start;
+    }
+
+    .qr-form-section {
+      background: #1a1a1a;
+      padding: 2rem;
+      border-radius: 1rem;
+      border: 1px solid #333;
+    }
+
+    .qr-form-section h2 {
+      color: #e11d48;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 0.75rem;
+      background: #222;
+      border: 2px solid #333;
+      border-radius: 0.5rem;
+      color: #fff;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      border-color: #e11d48;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.2);
+    }
+
+    .btn-generate {
+      background: #e11d48;
+      color: white;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      font-size: 1.1rem;
+    }
+
+    .btn-generate:hover {
+      background: #be123c;
+      transform: translateY(-2px);
+    }
+
+    .btn-generate:disabled {
+      background: #555;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .ticket-preview {
+      background: #1a1a1a;
+      padding: 2rem;
+      border-radius: 1rem;
+      border: 1px solid #333;
+      position: sticky;
+      top: 2rem;
+    }
+
+    .ticket-preview h2 {
+      color: #e11d48;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .ticket-design {
+      background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
+      border: 2px solid #e11d48;
+      border-radius: 1rem;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      min-height: 400px;
+    }
+
+    .ticket-design::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #e11d48, #be123c, #e11d48);
+    }
+
+    .ticket-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .ticket-logo {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 1rem;
+      display: block;
+    }
+
+    .ticket-title {
+      font-size: 1.5rem;
+      color: #e11d48;
+      margin-bottom: 0.5rem;
+    }
+
+    .ticket-subtitle {
+      color: #ccc;
+      font-size: 1rem;
+    }
+
+    .ticket-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .ticket-field {
+      background: rgba(225, 29, 72, 0.1);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid rgba(225, 29, 72, 0.2);
+    }
+
+    .ticket-field-label {
+      font-size: 0.8rem;
+      color: #888;
+      margin-bottom: 0.25rem;
+    }
+
+    .ticket-field-value {
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .ticket-qr {
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .qr-code {
+      background: white;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      display: inline-block;
+      margin-bottom: 1rem;
+    }
+
+    .ticket-footer {
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid #333;
+      color: #888;
+      font-size: 0.9rem;
+    }
+
+    .email-section {
+      background: #1a1a1a;
+      padding: 2rem;
+      border-radius: 1rem;
+      border: 1px solid #333;
+      margin-top: 2rem;
+    }
+
+    .email-section h3 {
+      color: #e11d48;
+      margin-bottom: 1rem;
+    }
+
+    .btn-send-email {
+      background: #4ade80;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 1rem;
+    }
+
+    .btn-send-email:hover {
+      background: #22c55e;
+    }
+
+    .btn-send-email:disabled {
+      background: #555;
+      cursor: not-allowed;
+    }
+
+    .tickets-list {
+      background: #1a1a1a;
+      padding: 2rem;
+      border-radius: 1rem;
+      border: 1px solid #333;
+      margin-top: 2rem;
+    }
+
+    .tickets-list h3 {
+      color: #e11d48;
+      margin-bottom: 1.5rem;
+    }
+
+    .ticket-item {
+      background: #222;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      border-left: 4px solid #e11d48;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ticket-item-info h4 {
+      color: #fff;
+      margin-bottom: 0.25rem;
+    }
+
+    .ticket-item-info p {
+      color: #ccc;
+      font-size: 0.9rem;
+    }
+
+    .ticket-item-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-small {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 0.25rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-view {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .btn-view:hover {
+      background: #2563eb;
+    }
+
+    .btn-resend {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .btn-resend:hover {
+      background: #d97706;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .loading.active {
+      display: block;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid transparent;
+      border-top: 3px solid #e11d48;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 1rem 1.5rem;
+      border-radius: 0.5rem;
+      color: white;
+      font-weight: 500;
+      z-index: 10000;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .notification.success {
+      background: #4ade80;
+    }
+
+    .notification.error {
+      background: #ef4444;
+    }
+
+    .notification.info {
+      background: #3b82f6;
+    }
+
+    @media (max-width: 768px) {
+      .qr-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+
+      .ticket-info {
+        grid-template-columns: 1fr;
+      }
+
+      .ticket-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+
+      .ticket-item-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="qr-manager">
+         <div class="qr-header">
+       <h1>QR Code Manager</h1>
+       <p>Generate and manage QR code tickets for TEDx Red Sea STEM</p>
+     </div>
+
+    <div class="qr-container">
+             <div class="qr-form-section">
+         <h2>Generate New Ticket</h2>
+        
+        <form id="qr-form">
+                     <div class="form-group">
+             <label for="attendee-name">Attendee Name</label>
+             <input type="text" id="attendee-name" name="attendee-name" required>
+           </div>
+
+           <div class="form-group">
+             <label for="attendee-email">Email Address</label>
+             <input type="email" id="attendee-email" name="attendee-email" required>
+           </div>
+
+           <div class="form-group">
+             <label for="attendee-phone">Phone Number</label>
+             <input type="tel" id="attendee-phone" name="attendee-phone" required>
+           </div>
+
+                      <div class="form-group">
+              <label for="ticket-type">Ticket Type</label>
+              <select id="ticket-type" name="ticket-type" required>
+                <option value="">Select ticket type</option>
+                <option value="Premium Ticket - EGP 300">Premium Ticket - EGP 300</option>
+              </select>
+            </div>
+
+           <div class="form-group">
+             <label for="seat-number">Seat Number</label>
+             <input type="text" id="seat-number" name="seat-number" placeholder="e.g., A-15" required>
+           </div>
+
+           <div class="form-group">
+             <label for="event-date">Event Date</label>
+             <input type="date" id="event-date" name="event-date" required>
+           </div>
+
+           <button type="submit" class="btn-generate" id="generate-btn">
+             Generate QR Code
+           </button>
+        </form>
+
+        <div class="loading" id="loading">
+          <div class="spinner"></div>
+          <p>Generating QR code...</p>
+        </div>
+      </div>
+
+             <div class="ticket-preview">
+         <h2>Ticket Preview</h2>
+        
+        <div class="ticket-design" id="ticket-design">
+          <div class="ticket-header">
+            <img src="images/logo.png" alt="TEDx Logo" class="ticket-logo">
+            <div class="ticket-title">TEDxRedSeaSTEM</div>
+            <div class="ticket-subtitle">Ideas Worth Spreading</div>
+          </div>
+
+          <div class="ticket-info">
+            <div class="ticket-field">
+              <div class="ticket-field-label">Attendee</div>
+              <div class="ticket-field-value" id="preview-name">-</div>
+            </div>
+            <div class="ticket-field">
+              <div class="ticket-field-label">Ticket Type</div>
+              <div class="ticket-field-value" id="preview-type">-</div>
+            </div>
+            <div class="ticket-field">
+              <div class="ticket-field-label">Seat</div>
+              <div class="ticket-field-value" id="preview-seat">-</div>
+            </div>
+            <div class="ticket-field">
+              <div class="ticket-field-label">Date</div>
+              <div class="ticket-field-value" id="preview-date">-</div>
+            </div>
+          </div>
+
+          <div class="ticket-qr" id="ticket-qr">
+            <div class="qr-code" id="qr-code">
+              <p style="color: #666; margin: 0;">QR Code will appear here</p>
+            </div>
+            <p style="color: #888; font-size: 0.9rem;">Scan this QR code at the event entrance</p>
+          </div>
+
+          <div class="ticket-footer">
+            <p>This ticket is non-transferable and valid for one-time use only</p>
+            <p>Generated on: <span id="generated-date">-</span></p>
+          </div>
+        </div>
+
+                 <div class="email-section" id="email-section" style="display: none;">
+           <h3>Send Ticket via Email</h3>
+           <p>Send this QR code ticket to the attendee's email address.</p>
+           <button class="btn-send-email" id="send-email-btn">
+             Send Email
+           </button>
+         </div>
+      </div>
+    </div>
+
+         <div class="tickets-list">
+       <h3>Generated Tickets</h3>
+      <div id="tickets-list">
+        <p style="color: #888; text-align: center;">No tickets generated yet</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="notification" id="notification"></div>
+
+  <script>
+         // Google Apps Script URL for email functionality
+     const EMAIL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfdLuJic8u2FdwM_RDb-OqGBEMvzdc8MwHoVsGy702TaeYOD04_Mgpq8DDIVNfswli/exec';
+    
+    let currentTicket = null;
+    let generatedTickets = JSON.parse(localStorage.getItem('tedx_tickets') || '[]');
+
+                   // Initialize the page
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('QR Code Manager initializing...');
+        
+        // Set default event date to September 6, 2025
+        const eventDate = document.getElementById('event-date');
+        eventDate.value = '2025-09-06';
+        
+        // Clear any existing data to start fresh
+        localStorage.removeItem('tedx_tickets');
+        generatedTickets = [];
+        
+        // QR generator is ready immediately
+        showNotification('QR Code Manager ready!', 'success');
+        
+        // Load existing tickets (should be empty now)
+        displayTickets();
+        
+        // Form submission handler
+        document.getElementById('qr-form').addEventListener('submit', generateQRCode);
+        
+        // Email sending handler
+        document.getElementById('send-email-btn').addEventListener('click', sendEmail);
+      });
+
+                                                                                                                                                               function generateQRCode(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const formData = new FormData(form);
+        
+        // Get form values
+        const attendeeName = formData.get('attendee-name');
+        const attendeeEmail = formData.get('attendee-email');
+        const attendeePhone = formData.get('attendee-phone');
+        const ticketType = formData.get('ticket-type');
+        const seatNumber = formData.get('seat-number');
+        const eventDate = formData.get('event-date');
+        
+        // Show loading
+        document.getElementById('loading').classList.add('active');
+        document.getElementById('generate-btn').disabled = true;
+        
+        try {
+          // Generate unique ticket ID
+          const ticketId = 'TEDX-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+          
+          // Create ticket data
+          const ticketData = {
+            id: ticketId,
+            name: attendeeName,
+            email: attendeeEmail,
+            phone: attendeePhone,
+            type: ticketType,
+            seat: seatNumber,
+            date: eventDate,
+            generatedAt: new Date().toISOString(),
+            qrData: JSON.stringify({
+              ticketId: ticketId,
+              name: attendeeName,
+              email: attendeeEmail,
+              type: ticketType,
+              seat: seatNumber,
+              date: eventDate
+            })
+          };
+          
+                    // Generate QR code using built-in generator
+           const qrCanvas = qrGenerator.generate(ticketData.qrData, 200);
+        
+          // Update preview
+          updateTicketPreview(ticketData, qrCanvas);
+          
+          // Store ticket
+          currentTicket = ticketData;
+          generatedTickets.push(ticketData);
+          localStorage.setItem('tedx_tickets', JSON.stringify(generatedTickets));
+          
+          // Show email section
+          document.getElementById('email-section').style.display = 'block';
+          
+          // Update tickets list
+          displayTickets();
+          
+          showNotification('QR Code generated successfully!', 'success');
+          
+        } catch (error) {
+          console.error('Error generating QR code:', error);
+          showNotification('Error generating QR code. Please try again.', 'error');
+        } finally {
+          document.getElementById('loading').classList.remove('active');
+          document.getElementById('generate-btn').disabled = false;
+        }
+      }
+
+    function updateTicketPreview(ticketData, qrCanvas) {
+      // Update ticket information
+      document.getElementById('preview-name').textContent = ticketData.name;
+      document.getElementById('preview-type').textContent = ticketData.type;
+      document.getElementById('preview-seat').textContent = ticketData.seat;
+      document.getElementById('preview-date').textContent = new Date(ticketData.date).toLocaleDateString();
+      document.getElementById('generated-date').textContent = new Date(ticketData.generatedAt).toLocaleString();
+      
+      // Update QR code
+      const qrContainer = document.getElementById('qr-code');
+      qrContainer.innerHTML = '';
+      qrContainer.appendChild(qrCanvas);
+    }
+
+         async function sendEmail() {
+       if (!currentTicket) {
+         showNotification('No ticket to send. Please generate a ticket first.', 'error');
+         return;
+       }
+       
+       const sendBtn = document.getElementById('send-email-btn');
+       sendBtn.disabled = true;
+               sendBtn.innerHTML = 'Sending...';
+       
+       try {
+         // Get QR code as data URL
+         const qrDataUrl = qrGenerator.toDataURL();
+         
+         // Create a hidden form to submit to Google Apps Script
+         const form = document.createElement('form');
+         form.method = 'POST';
+         form.action = EMAIL_SCRIPT_URL;
+         form.target = '_blank';
+         form.style.display = 'none';
+         
+         // Add form fields
+         const fields = {
+           'to': currentTicket.email,
+           'subject': `Your TEDxRedSeaSTEM Ticket - ${currentTicket.name}`,
+           'attendeeName': currentTicket.name,
+           'attendeeEmail': currentTicket.email,
+           'attendeePhone': currentTicket.phone,
+           'ticketType': currentTicket.type,
+           'seatNumber': currentTicket.seat,
+           'eventDate': currentTicket.date,
+           'ticketId': currentTicket.id,
+           'qrCode': qrDataUrl
+         };
+         
+         for (const [key, value] of Object.entries(fields)) {
+           const input = document.createElement('input');
+           input.type = 'hidden';
+           input.name = key;
+           input.value = value;
+           form.appendChild(input);
+         }
+         
+         // Submit the form
+         document.body.appendChild(form);
+         form.submit();
+         document.body.removeChild(form);
+         
+         // Mark ticket as sent
+         currentTicket.sent = true;
+         localStorage.setItem('tedx_tickets', JSON.stringify(generatedTickets));
+         displayTickets();
+         
+         showNotification('Ticket sent successfully! Check your email.', 'success');
+         
+       } catch (error) {
+         console.error('Error sending email:', error);
+         showNotification('Error sending email. Please try again.', 'error');
+       } finally {
+         sendBtn.disabled = false;
+                   sendBtn.innerHTML = 'Send Email';
+       }
+     }
+
+    function displayTickets() {
+      const ticketsList = document.getElementById('tickets-list');
+      
+      if (generatedTickets.length === 0) {
+        ticketsList.innerHTML = '<p style="color: #888; text-align: center;">No tickets generated yet</p>';
+        return;
+      }
+      
+      ticketsList.innerHTML = generatedTickets.map(ticket => `
+        <div class="ticket-item">
+          <div class="ticket-item-info">
+            <h4>${ticket.name}</h4>
+            <p>${ticket.type} • Seat ${ticket.seat} • ${new Date(ticket.date).toLocaleDateString()}</p>
+            <p style="font-size: 0.8rem; color: #666;">ID: ${ticket.id}</p>
+          </div>
+                     <div class="ticket-item-actions">
+             <button class="btn-small btn-view" onclick="viewTicket('${ticket.id}')">
+               View
+             </button>
+             ${!ticket.sent ? `<button class="btn-small btn-resend" onclick="resendTicket('${ticket.id}')">
+               Resend
+             </button>` : '<span style="color: #4ade80; font-size: 0.8rem;">✓ Sent</span>'}
+           </div>
+        </div>
+      `).join('');
+    }
+
+                                                                                                                                                                                                                                                                                                                               function viewTicket(ticketId) {
+        const ticket = generatedTickets.find(t => t.id === ticketId);
+        if (ticket) {
+          currentTicket = ticket;
+                     // Regenerate QR code for display
+           const canvas = qrGenerator.generate(ticket.qrData, 200);
+          updateTicketPreview(ticket, canvas);
+          document.getElementById('email-section').style.display = 'block';
+          // Scroll to preview
+          document.querySelector('.ticket-preview').scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+
+    async function resendTicket(ticketId) {
+      const ticket = generatedTickets.find(t => t.id === ticketId);
+      if (ticket) {
+        currentTicket = ticket;
+        await sendEmail();
+      }
+    }
+
+    function showNotification(message, type = 'info') {
+      const notification = document.getElementById('notification');
+      notification.textContent = message;
+      notification.className = `notification ${type}`;
+      notification.classList.add('show');
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+
+
+  </script>
+</body>
+</html>
